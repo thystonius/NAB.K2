@@ -95,6 +95,13 @@ namespace NAB.K2.SharePointSearch.Configuration
             }
 
 
+            if(query.MaxRecords <= 0)
+            {
+                messages.Add("Max Rows must be greater than zero.");
+                IsOk = false;
+            }
+
+
             errorMessages = messages;
             return IsOk;
         }

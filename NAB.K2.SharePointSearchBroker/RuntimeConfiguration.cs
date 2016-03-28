@@ -42,13 +42,13 @@ namespace NAB.K2.SharePointSearch.Broker
         public static RuntimeConfiguration GetRuntimeConfig(SharePointSearchBroker svc)
         {
 
-            if(!_runtimeConfig.ContainsKey(svc.Service.Guid))
+            if(!_runtimeConfig.ContainsKey(svc.ServiceInstanceGuid))
             {
 
                 //Be sure to lock the dictionary to ensure proper threading
                 lock(_runtimeLock)
                 {
-                    if (!_runtimeConfig.ContainsKey(svc.Service.Guid))
+                    if (!_runtimeConfig.ContainsKey(svc.ServiceInstanceGuid))
                     {
                         //Config Store
                         ConfigurationStore store;
@@ -70,12 +70,12 @@ namespace NAB.K2.SharePointSearch.Broker
                         //Create a new runtime config object
                         RuntimeConfiguration r = new RuntimeConfiguration(store);
 
-                        _runtimeConfig.Add(svc.Service.Guid, r);
+                        _runtimeConfig.Add(svc.ServiceInstanceGuid, r);
                     }
                 }
             }
 
-            return _runtimeConfig[svc.Service.Guid];
+            return _runtimeConfig[svc.ServiceInstanceGuid];
 
         }
 

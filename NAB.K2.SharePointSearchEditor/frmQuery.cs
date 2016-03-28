@@ -91,6 +91,7 @@ namespace NAB.K2.SharePointSearchEditor
 
             QueryDef q = new QueryDef();
             q.FolderId = folderId;
+            q.MaxRecords = 100;
             q.QueryTimeoutSeconds = 10;
             q.CacheSeconds = 120;
             f._Query = q;

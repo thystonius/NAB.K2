@@ -82,7 +82,7 @@ namespace NAB.K2.SharePointSearch
         #region IRuntimeConnection Members
 
         //Property Accessors - note, this are read-only at timetime and should not be written to from any runtime class
-        public Guid ServiceId { get { return this.Service.Guid; } set { throw new Exception("SP Search Broker: Not allowed to change ServiceId at runtime"); } }
+        public Guid ServiceId { get { return this.ServiceInstanceGuid; } set { throw new Exception("SP Search Broker: Not allowed to change ServiceId at runtime"); } }
         public string SharePointUrl { get { return this.Service.ServiceConfiguration[PROP_SPURL].ToString(); } set { throw new Exception("SP Search Broker: Not allowed to change SP URL at runtime"); } }
         public int MaxRows { get { return Convert.ToInt32(this.Service.ServiceConfiguration[PROP_MAXRECORDS]); } set { throw new Exception("SP Search Broker: Not allowed to change Max Rows at runtime"); } }
         public int MaxTimeout { get { return Convert.ToInt32(this.Service.ServiceConfiguration[PROP_MAXTIMEOUT]); } set { throw new Exception("SP Search Broker: Not allowed to change Max Timeout at runtime"); } }
@@ -210,7 +210,7 @@ namespace NAB.K2.SharePointSearch
         {
 
             //Clear any currently cached configuration information for this service id
-            RuntimeConfiguration.ClearServiceCache(this.Service.Guid);
+            RuntimeConfiguration.ClearServiceCache(this.ServiceInstanceGuid);
 
 
             //Create type mapper

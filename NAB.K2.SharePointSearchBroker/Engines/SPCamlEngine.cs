@@ -96,8 +96,9 @@ namespace NAB.K2.SharePointSearch.Engines
                                 rc.Description = colMeta.InternalName;
                             }
                             
+                            //Thi is VERY critical to get correct.  K2 Uses this value to build DataTables for your Service Objects (so be sure to use proper .NET Types if you want things to work!!)
                             rc.ColumnType = TypeMapper.DecipherObjectType(i.FieldValues[colMeta.InternalName]);
-                            rc.InternalType = colMeta.TypeAsString;
+                            rc.InternalType = rc.ColumnType.Name;
 
 
                         }else{
@@ -150,15 +151,22 @@ namespace NAB.K2.SharePointSearch.Engines
                 //Check for cancelation
                 cancelToken.ThrowIfCancellationRequested();
 
+                DataRow dr;
+                Property p;
+
                 //Loop through the items in the collection
                 foreach (var item in l)
                 {
-                    DataRow dr = dt.NewRow();
-
+                    dr = dt.NewRow();
+                    
                     //Get each return property
                     for (int i = 0; i < returnProperties.Length; i++)
                     {
-                        dr[returnProperties[i].Name] = item.FieldValues[qRuntime.GetReturnName(returnProperties[i].Name)];
+                        //Current return column
+                        p = returnProperties[i];
+        
+                        dr[p.Name] = item.FieldValues[qRuntime.GetReturnName(p.Name)] ?? DBNull.Value;
+                        
                     }
 
                     //Add the row
