@@ -8,53 +8,29 @@
 *   Use of this work or any derivative constitute an acceptance of all license terms and conditions.
 *   
 *   Project: NAB.K2.SharePointSearch
-*   Namespace: NAB.K2.SharePointSearch.Configuration
+*   Namespace: NAB.K2.SharePointSearch.Functions
 *   Written by: nathan.brown 
 **********************************************************************************/
 #endregion
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NAB.K2.SharePointSearch.Configuration
+namespace NAB.K2.SharePointSearch.Functions
 {
-
     /// <summary>
-    /// Class defined a return column for a query
+    /// Interface used for classes that define a function for post processing query values
     /// </summary>
-    public class QueryColumn : PropertyBase
+    public interface IProcessFunction
     {
 
-        /// <summary>
-        /// Name of the column from the data source
-        /// </summary>
-        public string SourceColumn { get; set; }
+        string Name { get; }
+        string Description { get; }
 
-        /// <summary>
-        /// Type of the column at the data source
-        /// </summary>
-        public string ColumnType { get; set; }
-
-
-        /// <summary>
-        /// Full Assembly Qualified Type Name of the function for post processing
-        /// </summary>
-        public string ProcessFunction { get; set; }
-
-        /// <summary>
-        /// Parameter to be passed to the processing function during execution
-        /// </summary>
-        public string ProcessFunctionParameter { get; set; }
+        object ProcessValue(object input, string parameters);
         
-        /// <summary>
-        /// Indicates if this column should be returned as part of the data set into K2
-        /// </summary>
-        public bool Include { get; set; }
-
-
 
     }
 }

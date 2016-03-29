@@ -60,6 +60,7 @@
             this.dialogSave = new System.Windows.Forms.SaveFileDialog();
             this.labelName = new System.Windows.Forms.Label();
             this.labelVersion = new System.Windows.Forms.Label();
+            this.buttonSaveAs = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
@@ -189,7 +190,7 @@
             this.listQueries.HideSelection = false;
             this.listQueries.Location = new System.Drawing.Point(3, 3);
             this.listQueries.Name = "listQueries";
-            this.listQueries.Size = new System.Drawing.Size(948, 635);
+            this.listQueries.Size = new System.Drawing.Size(944, 635);
             this.listQueries.TabIndex = 11;
             this.listQueries.UseCompatibleStateImageBehavior = false;
             this.listQueries.View = System.Windows.Forms.View.Details;
@@ -283,6 +284,7 @@
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.buttonNewDocument,
             this.buttonSave,
+            this.buttonSaveAs,
             this.buttonOpen,
             this.toolStripSeparator1,
             this.buttonConfigSettings,
@@ -312,6 +314,7 @@
             this.buttonSave.Name = "buttonSave";
             this.buttonSave.Size = new System.Drawing.Size(36, 36);
             this.buttonSave.Text = "Save";
+            this.buttonSave.ToolTipText = "Save the current configuration file";
             this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
             // 
             // buttonOpen
@@ -375,6 +378,7 @@
             this.labelName.Size = new System.Drawing.Size(345, 38);
             this.labelName.TabIndex = 5;
             this.labelName.Text = "Name of the configuration";
+            this.labelName.DoubleClick += new System.EventHandler(this.labelName_DoubleClick);
             // 
             // labelVersion
             // 
@@ -384,6 +388,17 @@
             this.labelVersion.Size = new System.Drawing.Size(108, 17);
             this.labelVersion.TabIndex = 6;
             this.labelVersion.Text = "Version: 1.0.0.0";
+            // 
+            // buttonSaveAs
+            // 
+            this.buttonSaveAs.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.buttonSaveAs.Image = ((System.Drawing.Image)(resources.GetObject("buttonSaveAs.Image")));
+            this.buttonSaveAs.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.buttonSaveAs.Name = "buttonSaveAs";
+            this.buttonSaveAs.Size = new System.Drawing.Size(36, 36);
+            this.buttonSaveAs.Text = "Save";
+            this.buttonSaveAs.ToolTipText = "Save As";
+            this.buttonSaveAs.Click += new System.EventHandler(this.buttonSaveAs_Click);
             // 
             // frmMain
             // 
@@ -443,6 +458,7 @@
         private System.Windows.Forms.ToolStripButton buttonConnect;
         private System.Windows.Forms.Button buttonCopyQuery;
         private System.Windows.Forms.ToolStripButton buttonNewDocument;
+        private System.Windows.Forms.ToolStripButton buttonSaveAs;
     }
 }
 

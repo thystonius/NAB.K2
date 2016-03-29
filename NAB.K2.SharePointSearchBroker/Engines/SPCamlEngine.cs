@@ -40,14 +40,12 @@ namespace NAB.K2.SharePointSearch.Engines
 
     public class SPCamlEngine : IQueryEngine
     {
-
-
-
+        
 
         #region Retrieve Columns
-        public List<ReturnColumn> RetrieveOutputColumns(IRuntimeConnection conn, IMacroValueProvider parameters, QueryRuntime qRuntime)
+        public List<DetectedColumn> DetectOutputColumns(IRuntimeConnection conn, IMacroValueProvider parameters, QueryRuntime qRuntime)
         {
-            List<ReturnColumn> cols = new List<ReturnColumn>();
+            List<DetectedColumn> cols = new List<DetectedColumn>();
 
             using (ClientContext clientContext = new ClientContext(qRuntime.SiteUrl.GenerateString(parameters)))
             {
@@ -70,12 +68,12 @@ namespace NAB.K2.SharePointSearch.Engines
                     //Ok, this is kinda silly, but we have to put all these fields into a dictionary so we can find them quickly
                     Dictionary<string, Field> fields = fc.ToDictionary(f => f.InternalName, StringComparer.InvariantCultureIgnoreCase);
 
-                    
-                    ReturnColumn rc;
+
+                    DetectedColumn rc;
                     foreach(var curCol in i.FieldValues.Keys)
                     {
                         //Create the new return column
-                        rc = new ReturnColumn();
+                        rc = new DetectedColumn();
                         
                         //Try and lookup this column in the "full" list of columns for this list
                         
@@ -112,7 +110,17 @@ namespace NAB.K2.SharePointSearch.Engines
                         }
 
                         rc.ContainsData = true;
-                                                
+
+                        //try to get the length so we can check make an attempt to check for memo fields
+                        if (i.FieldValuesAsText[curCol] != null)
+                        {
+                            rc.ContentLength = i.FieldValuesAsText[curCol].Length;
+                        }
+                        else
+                        {
+                            rc.ContentLength = 0;
+                        }
+                                                                       
 
                         cols.Add(rc);
                     }
@@ -155,18 +163,20 @@ namespace NAB.K2.SharePointSearch.Engines
                 Property p;
 
                 //Loop through the items in the collection
-                foreach (var item in l)
+                for (int row = 0; row < l.Count; row++)
                 {
+                    ListItem item = l[row];
+
                     dr = dt.NewRow();
-                    
+
                     //Get each return property
                     for (int i = 0; i < returnProperties.Length; i++)
                     {
                         //Current return column
                         p = returnProperties[i];
-        
+
                         dr[p.Name] = item.FieldValues[qRuntime.GetReturnName(p.Name)] ?? DBNull.Value;
-                        
+
                     }
 
                     //Add the row
@@ -178,7 +188,7 @@ namespace NAB.K2.SharePointSearch.Engines
                         //Hit max records
                         break;
                     }
-                    
+
                     //Check for cancelation
                     cancelToken.ThrowIfCancellationRequested();
 
@@ -197,7 +207,7 @@ namespace NAB.K2.SharePointSearch.Engines
         public DataTable ExecuteToDataTable(IRuntimeConnection conn, IMacroValueProvider parameters, QueryRuntime qRuntime)
         {
 
-            List<ReturnColumn> cols = new List<ReturnColumn>();
+            List<DetectedColumn> cols = new List<DetectedColumn>();
 
             using (ClientContext clientContext = new ClientContext(qRuntime.SiteUrl.GenerateString(parameters)))
             {
@@ -304,7 +314,6 @@ namespace NAB.K2.SharePointSearch.Engines
         } 
         #endregion
         
-
         #region Service Object Creation
         public List<ServiceObject> CreateServiceObjects(ServiceInstance service, QueryDef query)
         {

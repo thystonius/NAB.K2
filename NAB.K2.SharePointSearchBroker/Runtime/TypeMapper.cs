@@ -58,7 +58,7 @@ namespace NAB.K2.SharePointSearch.Runtime
             if(_standardSOMap == null)
             {
                 //Force load of the dictionaries
-                NABK2SoType t = ProposeSOType("string");
+                NABK2SoType t = ProposeSOType("string", 0);
             }
 
             //Return the type
@@ -73,7 +73,7 @@ namespace NAB.K2.SharePointSearch.Runtime
         /// </summary>
         /// <param name="typeName"></param>
         /// <returns></returns>
-        public static NABK2SoType ProposeSOType(string typeName)
+        public static NABK2SoType ProposeSOType(string typeName, int length)
         {
             if (_standardTypeMap == null)
             {
@@ -84,11 +84,21 @@ namespace NAB.K2.SharePointSearch.Runtime
 
             if (_standardTypeMap.ContainsKey(tn))
             {
-                return _standardTypeMap[tn].Item1;
+                NABK2SoType output = _standardTypeMap[tn].Item1;
+                if(output == NABK2SoType.Text)
+                {
+                    if(length > 1024)
+                    {
+                        output = NABK2SoType.Memo;
+                    }
+
+                }
+
+                return output;
             }
             else
             {
-                //Run home to mama
+                //Run home to mama (default to text)
                 return NABK2SoType.Text;
             }
         }

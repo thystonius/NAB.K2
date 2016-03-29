@@ -33,7 +33,7 @@ namespace NAB.K2.SharePointSearchEditor.Utility
         public static void CenterFormOnForm(Form childForm, Form parentForm)
         {
             //Set the location of the child form
-            childForm.Location = new System.Drawing.Point(parentForm.Location.X + (childForm.Size.Width / 2), parentForm.Location.Y + ((parentForm.Size.Height - childForm.Size.Height) / 2));
+            childForm.Location = new System.Drawing.Point(parentForm.Location.X + ((parentForm.Size.Width - childForm.Size.Width) / 2), parentForm.Location.Y + ((parentForm.Size.Height - childForm.Size.Height) / 2));
 
         }
 

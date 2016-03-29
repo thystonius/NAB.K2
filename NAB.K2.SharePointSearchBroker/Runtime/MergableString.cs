@@ -29,6 +29,7 @@ namespace NAB.K2.SharePointSearch.Runtime
     /// This class is designed for use when a single string will be used multiple times during runtime
     /// 
     /// NOTE: Read through this code carefully as it was desired for runtime optimization and to reduce string concatenations
+    ///     Additionally, this is designed to be as immutable as possible so most private members are marked read-only
     /// </summary>
     public class MergableString
     {
@@ -45,17 +46,17 @@ namespace NAB.K2.SharePointSearch.Runtime
 
 
         /// <summary>
-        /// REGEX Patter the find all macros in a string
+        /// REGEX Pattern the find all macros in a string
         /// </summary>
         public const string MACRO_REGEX = @"%%\{(\s*?.*?)*?\}%%";
         
 
         private readonly string _originalString;
-        private bool _isMerged;
+        private readonly bool _isMerged;
 
-        private MatchCollection _macros = null;
-        private List<MergeSnippit> _snippits = null;
-        private int _preMergeLength;
+        private readonly MatchCollection _macros;
+        private readonly List<MergeSnippit> _snippits;
+        private readonly int _preMergeLength;
 
         public MergableString(string template)
         {
@@ -67,6 +68,9 @@ namespace NAB.K2.SharePointSearch.Runtime
             {
                 //None - so we are good to go
                 _isMerged = false;
+                _macros = null;
+                _snippits = null;
+
                 return;
 
             }else
@@ -85,8 +89,7 @@ namespace NAB.K2.SharePointSearch.Runtime
                     var match = _macros[i];
 
                     //Get the portion of the script between last macro and here
-                    snip = new MergeSnippit();
-                    snip.Snippit = _originalString.Substring(curPos, match.Index - curPos);
+                    snip = new MergeSnippit(_originalString.Substring(curPos, match.Index - curPos), false);
                     _snippits.Add(snip);
                     _preMergeLength += snip.Length;
 
@@ -94,21 +97,19 @@ namespace NAB.K2.SharePointSearch.Runtime
                     //Now create one for the macro itself
                     //NOTE ALL MACROS ARE STORED IN UPPER CASE internally
                     //PARAMETERS AND SUCH MUST ALSO BE IN UPPER CASE OR MAKE SURE to Use CaseInsensitive string comparisons
-                    _snippits.Add(MergeSnippit.CreateMacroSnip(match.Value.ToUpper()));
+                    //Storing them and displaying them in Upper Case can help re-infornce the case insensitiveness of this comparison
+                    _snippits.Add(new MergeSnippit(match.Value.ToUpper(), true));
 
 
                     //Move to the next location
                     curPos = match.Index + match.Length;
-
 
                 }
 
                 //Check for tail
                 if(curPos < _originalString.Length)
                 {
-                    snip = new MergeSnippit();
-                    snip.Snippit = _originalString.Substring(curPos);
-                    _snippits.Add(snip);
+                    _snippits.Add(new MergeSnippit(_originalString.Substring(curPos), false));
                 }
 
 
@@ -118,7 +119,11 @@ namespace NAB.K2.SharePointSearch.Runtime
 
         }
 
-        
+        /// <summary>
+        /// Returns if this string contains any macros or if it is a constant value
+        /// </summary>
+        public bool IsMerged { get { return _isMerged;  } }
+
         /// <summary>
         /// Method to marge the original source string with values from the IMacroValueProvider
         /// This methos is Thread Safe
@@ -198,23 +203,21 @@ namespace NAB.K2.SharePointSearch.Runtime
 
         /// <summary>
         /// Internal class used to store the pre-merged bits of a MergableString
+        /// Should not be used or references outside of this class
         /// </summary>
         class MergeSnippit
         {
 
-            public string Snippit { get; set; }
-            public bool IsMacro { get; set; }
+            public string Snippit { get; private set; }
+            public bool IsMacro { get; private set; }
             public int Length { get { return Snippit.Length; } }
 
-            public static MergeSnippit CreateMacroSnip(string macro)
+            public MergeSnippit(string snip, bool isMacro)
             {
-                MergeSnippit s = new MergeSnippit();
-                s.IsMacro = true;
-
-                s.Snippit = MergableString.StripMacro(macro);
-
-                return s;
+                this.IsMacro = isMacro;
+                this.Snippit = isMacro ? MergableString.StripMacro(snip) : snip;
             }
+
 
         }
 

@@ -29,6 +29,7 @@ namespace NAB.K2.SharePointSearch.Runtime
     /// Class that supliments the QueryDef with properties that are best calculated once during runtime and then reused for entire application context
     /// These values should never be stored and are only applicable to the executing engine during runtime
     /// This is intended to optomize for run-time at the cost of continually rebuilding during design
+    /// Every method of this class should be Thread-Safe and 
     /// </summary>
     public class QueryRuntime
     {
@@ -62,7 +63,10 @@ namespace NAB.K2.SharePointSearch.Runtime
        
         //Columns and Parameters
         private Dictionary<string, QueryParameter> _parameters;
-        private Dictionary<string, QueryColumn> _returnColumns;
+
+        //All Return columns from the Query
+        private Dictionary<string, ReturnColumn> _returnColumns;
+        private List<ReturnColumn> _returnColumnsList;
 
         public DateTime PerfInitDate { get { return _perfInitDate; } }
         public int PerfTotalExecute { get { return _perfTotalExecute; } }
@@ -73,9 +77,9 @@ namespace NAB.K2.SharePointSearch.Runtime
         public int PerfCacheMisses { get { return _perfCacheMisses; } }
                 
         /// <summary>
-        /// Maps Internal Names (ones provided to K2) the the source column name 
+        /// Maps Internal Names (ones provided to K2) to the source column name 
         /// </summary>
-        private Dictionary<string, string> _returnLookup;
+        private readonly Dictionary<string, string> _returnLookup;
 
         //Public Read-Only Accessors
         public MergableString SiteUrl { get { return _siteUrl; } }
@@ -83,11 +87,10 @@ namespace NAB.K2.SharePointSearch.Runtime
         public MergableString QueryText { get { return _queryText; } }
 
         public int QueryTimeout { get { return _actualTimeoutSeconds; } }
-        public bool CachingEnabled { get { return _cachingEnabled;  } }
+        public bool CachingEnabled { get { return _cachingEnabled; } }
 
         public string QueryId { get { return _query.QueryId; } }
         public QueryDef Query { get { return _query; } }
-
 
         /// <summary>
         /// Pre-builds an values that would speed up the execution of this query during runtime
@@ -124,10 +127,16 @@ namespace NAB.K2.SharePointSearch.Runtime
 
 
             //Convert to dictionary for easy lookup access
-            //NOTE - WE ARE FORCING ToUpper for all parameter names, this is done only once on load so we don't have to do it everywhere during runtime
+            //NOTE - WE ARE FORCING ToUpper for all parameter names, this is done only once on load
+            //To reduce confusion, we force UPPER on this values so all error messages and displayes report an upper case value which most users will understand as case insensitive
             _parameters = (from c in query.Parameters select new { c.Name, c }).ToDictionary(t => t.Name.ToUpper(), t=> t.c);
 
-            _returnColumns = (from c in query.Columns where c.Include == true select c).ToDictionary(t => t.SourceColumn, t => t, StringComparer.InvariantCultureIgnoreCase);
+            //Note that all comparisons are InvariantCulture this is to prevent any Culture problems when a configuration file is moved from one machine to another
+            //This means that it should ALWAYS perform the same way
+            _returnColumns = (from c in query.Columns where c.Include == true select c).ToDictionary(t => t.SourceColumn, t => new ReturnColumn(t), StringComparer.InvariantCultureIgnoreCase);
+            _returnColumnsList = _returnColumns.Values.ToList();
+            
+            
             _returnLookup = (from c in query.Columns where c.Include == true select c).ToDictionary(t => t.Name, t => t.SourceColumn, StringComparer.InvariantCultureIgnoreCase);
 
             //Check for caching
@@ -173,11 +182,9 @@ namespace NAB.K2.SharePointSearch.Runtime
             {
                 return null;
             }
-
-
         }
 
-        public QueryColumn GetColumn(string sourceName)
+        public ReturnColumn GetColumn(string sourceName)
         {
             if(_returnColumns.ContainsKey(sourceName))
             {
@@ -188,6 +195,8 @@ namespace NAB.K2.SharePointSearch.Runtime
                 return null;
             }
         }
+
+        public List<ReturnColumn> ReturnColumns { get { return _returnColumnsList; } }
 
         public string GetReturnName(string name)
         {

@@ -8,7 +8,7 @@
 *   Use of this work or any derivative constitute an acceptance of all license terms and conditions.
 *   
 *   Project: NAB.K2.SharePointSearch
-*   Namespace: NAB.K2.SharePointSearch.Configuration
+*   Namespace: NAB.K2.SharePointSearch.Runtime
 *   Written by: nathan.brown 
 **********************************************************************************/
 #endregion
@@ -19,42 +19,48 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NAB.K2.SharePointSearch.Configuration
+namespace NAB.K2.SharePointSearch.Runtime
 {
-
     /// <summary>
-    /// Class defined a return column for a query
+    /// Class used by Engines to provide information about columns returned by a query
+    /// Used during design process
     /// </summary>
-    public class QueryColumn : PropertyBase
+    public class DetectedColumn
     {
+        /// <summary>
+        /// Name of the column from the source
+        /// </summary>
+        public string Name { get; set; }
 
         /// <summary>
-        /// Name of the column from the data source
+        /// Displayable name of the column
         /// </summary>
-        public string SourceColumn { get; set; }
-
-        /// <summary>
-        /// Type of the column at the data source
-        /// </summary>
-        public string ColumnType { get; set; }
-
-
-        /// <summary>
-        /// Full Assembly Qualified Type Name of the function for post processing
-        /// </summary>
-        public string ProcessFunction { get; set; }
-
-        /// <summary>
-        /// Parameter to be passed to the processing function during execution
-        /// </summary>
-        public string ProcessFunctionParameter { get; set; }
+        public string DisplayName { get; set; }
         
         /// <summary>
-        /// Indicates if this column should be returned as part of the data set into K2
+        /// Metadata long description of the column
         /// </summary>
-        public bool Include { get; set; }
+        public string Description { get; set; }
+        
+        /// <summary>
+        /// .NET Type to use for returned value
+        /// </summary>
+        public Type ColumnType { get; set; }
 
+        /// <summary>
+        /// Indicates if this column contains data
+        /// </summary>
+        public bool ContainsData { get; set; }
 
+        /// <summary>
+        /// Source Type of the provided data
+        /// </summary>
+        public string InternalType { get; set; }
+
+        /// <summary>
+        /// Content Length reported for the first row (est. only)
+        /// </summary>
+        public int ContentLength { get; set; }
 
     }
 }

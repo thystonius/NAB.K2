@@ -55,13 +55,16 @@ namespace NAB.K2.SharePointSearchEditor
 
             colColSMOType.DataSource = Enum.GetValues(typeof(NABK2SoType));
             colColSMOType.ValueType = typeof(NABK2SoType);
-
-
+            
             _ColTrueFalse(colParamRequired);
             _ColTrueFalse(colParamIsCalculated);
-
             _ColTrueFalse(colColInlcude);
-            
+
+            colColProcessFunction.DataSource = DesignFunctionCache.AllFunctionDefs;
+            colColProcessFunction.DisplayMember = "Name";
+            colColProcessFunction.ValueMember = "TypeName";            
+            colColProcessFunction.ValueType = typeof(string);
+
 
         }
 
@@ -144,7 +147,6 @@ namespace NAB.K2.SharePointSearchEditor
         }
 
         #endregion
-
 
         #region Load & Save
 
@@ -229,6 +231,9 @@ namespace NAB.K2.SharePointSearchEditor
                 r.Cells[colColInlcude.Index].Value = c.Include;
 
                 r.Cells[colColSMOType.Index].Value = (NABK2SoType)c.SMOType;
+
+                r.Cells[colColProcessFunction.Index].Value = c.ProcessFunction;
+                r.Cells[colColFunctionParams.Index].Value = c.ProcessFunctionParameter;
 
             }
 
@@ -322,6 +327,9 @@ namespace NAB.K2.SharePointSearchEditor
 
                     Enum.TryParse<NABK2SoType>(r.Cells[colColSMOType.Index].Value.ToString(), out soType);
                     c.SMOType = (int)soType;
+
+                    c.ProcessFunction = r.Cells[colColProcessFunction.Index].Value as string;
+                    c.ProcessFunctionParameter = r.Cells[colColFunctionParams.Index].Value as string;
 
                     //Add
                     q.Columns.Add(c);                   
@@ -496,6 +504,85 @@ namespace NAB.K2.SharePointSearchEditor
 
         }
 
+        private void buttonColDown_Click(object sender, EventArgs e)
+        {
+            _SelectCellRow();
+            _moveDown();
+        }
+
+        private void buttonColUp_Click(object sender, EventArgs e)
+        {
+            _SelectCellRow();
+            _moveUp();
+        }
+
+        private void _SelectCellRow()
+        {
+            if(gridColumns.SelectedCells.Count > 0)
+            {
+                int r = gridColumns.SelectedCells[0].RowIndex;
+                gridColumns.Rows[r].Selected = true;
+            }
+        }
+
+
+        private void _moveUp()
+        {
+            if (gridColumns.RowCount > 0)
+            {
+                if (gridColumns.SelectedRows.Count > 0)
+                {
+                    int rowCount = gridColumns.Rows.Count;
+                    int index = gridColumns.SelectedCells[0].OwningRow.Index;
+
+                    if (index == 0)
+                    {
+                        return;
+                    }
+                    DataGridViewRowCollection rows = gridColumns.Rows;
+
+                    //Remove the previous row and add it behind the selected row.
+                    DataGridViewRow prevRow = rows[index - 1];
+                    rows.Remove(prevRow);
+                    prevRow.Frozen = false;
+                    rows.Insert(index, prevRow);
+                    gridColumns.ClearSelection();
+                    gridColumns.Rows[index - 1].Selected = true;
+                }
+            }
+        }
+
+        private void _moveDown()
+        {
+            if (gridColumns.RowCount > 0)
+            {
+                if (gridColumns.SelectedRows.Count > 0)
+                {
+                    int rowCount = gridColumns.Rows.Count;
+                    int index = gridColumns.SelectedCells[0].OwningRow.Index;
+
+                    //Include the header row
+                    if (index == (rowCount - 2)) 
+                    {
+                        return;
+                    }
+                    DataGridViewRowCollection rows = gridColumns.Rows;
+
+                    //Remove the next row and add it in front of the selected row.
+                    DataGridViewRow nextRow = rows[index + 1];
+                    rows.Remove(nextRow);
+                    nextRow.Frozen = false;
+                    rows.Insert(index, nextRow);
+                    gridColumns.ClearSelection();
+                    gridColumns.Rows[index + 1].Selected = true;
+                }
+            }
+        }
+
+
+
+
+
         #endregion
 
         #region Detect Columns
@@ -547,10 +634,10 @@ namespace NAB.K2.SharePointSearchEditor
             }
 
 
-            List<ReturnColumn> cols;
+            List<DetectedColumn> cols;
             try
             {
-                cols = engine.RetrieveOutputColumns(conn, rmp, qr);
+                cols = engine.DetectOutputColumns(conn, rmp, qr);
             }
             catch (Exception ex)
             {
@@ -564,40 +651,93 @@ namespace NAB.K2.SharePointSearchEditor
                 return;
             }
 
-            if (gridColumns.RowCount > 0)
+                        
+            //First create a dictionary of the new columns by source
+            var colsIndex = cols.ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
+
+            //Now we are going to loop through all the existin columns to make sure the source column is returned
+            List<DataGridViewRow> toDelete = new List<DataGridViewRow>();
+            for (int i = 0; i < gridColumns.Rows.Count; i++ )
             {
-                //Ask to overwrite
-                if (MessageBox.Show("This will overwrite existing columns.  Are you sure you want to proceed?", "Overwrite columns", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == System.Windows.Forms.DialogResult.No)
+                DataGridViewRow r = gridColumns.Rows[i];
+                if(!r.IsNewRow)
+                {
+                    if (!colsIndex.ContainsKey((string)r.Cells[colColSource.Index].Value))
+                    {
+                        //Did not find this column
+                        toDelete.Add(r);
+                    }
+                }
+                
+            }
+
+            int countDelete = toDelete.Count;
+            int countAdded = 0;
+
+            //Check for any to remove
+            if(toDelete.Count > 0)
+            {
+                if (MessageBox.Show(string.Format("Detected {0} columns that are not longer returned by the query.  This will remove these columns.  Are you sure you want to proceed?", toDelete.Count.ToString()), "Remove Columns", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == System.Windows.Forms.DialogResult.No)
                 {
                     return;
                 }
 
-                //Clear them
-                gridColumns.Rows.Clear();
-
+                //Remove all these 
+                foreach(var r in toDelete)
+                {
+                    gridColumns.Rows.Remove(r);
+                }
+                toDelete.Clear();
             }
-            
 
 
-            foreach(var c in cols)
+            //Loop through all the returned columns
+            bool isFound;
+            foreach (var c in cols)
             {
-                int index = gridColumns.Rows.Add();
+                isFound = false;
 
-                DataGridViewRow r = gridColumns.Rows[index];
-                r.Cells[colColSource.Index].Value = c.Name;
+                //Loop through existing columns to see if this column is in the grid
+                for (int i = 0; i < gridColumns.Rows.Count; i++ )
+                {
+                    DataGridViewRow r = gridColumns.Rows[i];
 
-                r.Cells[colColName.Index].Value = c.Name;
-                r.Cells[colColDisplay.Index].Value = c.DisplayName;
-                r.Cells[colColDescription.Index].Value = c.Description;
+                    if (!r.IsNewRow && !string.IsNullOrWhiteSpace((string)r.Cells[colColSource.Index].Value))
+                    {
+                        //Check if this Returned Column Name = Source Column
+                        if (string.Equals(c.Name, (string)r.Cells[colColSource.Index].Value, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            //We found this return column - so we do not need to add it
+                            isFound = true;
+                            break;
+                        }
+                    }                    
+                }
 
-                r.Cells[colColDataType.Index].Value = c.InternalType;
-                r.Cells[colColInlcude.Index].Value = c.ContainsData;
+                if(!isFound)
+                {
+                    int index = gridColumns.Rows.Add();
 
-                //Lastly we have to propose a SO type for c.ColumName
-                r.Cells[colColSMOType.Index].Value = TypeMapper.ProposeSOType(c.ColumnType.Name);
+                    DataGridViewRow r = gridColumns.Rows[index];
+                    r.Cells[colColSource.Index].Value = c.Name;
+
+                    r.Cells[colColName.Index].Value = c.Name;
+                    r.Cells[colColDisplay.Index].Value = c.DisplayName;
+                    r.Cells[colColDescription.Index].Value = c.Description;
+
+                    r.Cells[colColDataType.Index].Value = c.InternalType;
+                    r.Cells[colColInlcude.Index].Value = c.ContainsData;
+
+                    //Lastly we have to propose a SO type for c.ColumName
+                    r.Cells[colColSMOType.Index].Value = TypeMapper.ProposeSOType(c.ColumnType.Name, c.ContentLength);
+
+                    countAdded++;
+                }                
 
             }
 
+            //Complete
+            MessageBox.Show(string.Format("Found {0} columns, added {1}, removed {2}.", cols.Count.ToString(), countAdded.ToString(), countDelete.ToString()), "Column Detection Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
         }
 
@@ -761,10 +901,10 @@ namespace NAB.K2.SharePointSearchEditor
 
             RuntimeMacroProvider rmp = new RuntimeMacroProvider(qr, _paramProvider);
 
-            List<ReturnColumn> cols;
+            List<DetectedColumn> cols;
             try
             {
-                cols = engine.RetrieveOutputColumns(conn, rmp, qr);
+                cols = engine.DetectOutputColumns(conn, rmp, qr);
             }
             catch (Exception ex)
             {
@@ -802,7 +942,6 @@ namespace NAB.K2.SharePointSearchEditor
         
         #endregion
 
-
         #region Help Buttons
 
         private void buttonHelpKQL_Click(object sender, EventArgs e)
@@ -820,8 +959,6 @@ namespace NAB.K2.SharePointSearchEditor
         
         #endregion
 
-       
-        
 
     }
 }

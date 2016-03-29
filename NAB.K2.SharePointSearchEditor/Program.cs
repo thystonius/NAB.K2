@@ -23,7 +23,6 @@ using NAB.K2.SharePointSearch.Runtime;
 
 namespace NAB.K2.SharePointSearchEditor
 {
-
     
     static class Program
     {
@@ -43,6 +42,7 @@ namespace NAB.K2.SharePointSearchEditor
             MainForm = new frmMain();
 
             Application.Run(MainForm);
+
         }
     }
 }

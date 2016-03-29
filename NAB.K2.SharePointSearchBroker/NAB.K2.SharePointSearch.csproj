@@ -81,7 +81,10 @@
   <ItemGroup>
     <Compile Include="Configuration\ConfigurationExtension.cs" />
     <Compile Include="Configuration\QueryExtension.cs" />
+    <Compile Include="Engines\QueryEngineBase.cs" />
     <Compile Include="ExceptionUtility.cs" />
+    <Compile Include="Functions\IProcessFunction.cs" />
+    <Compile Include="Functions\OWSUserExtractUserFullName.cs" />
     <Compile Include="Runtime\EngineController.cs" />
     <Compile Include="QueryTimeoutException.cs" />
     <Compile Include="Runtime\HashUtility.cs" />
@@ -92,13 +95,14 @@
     <Compile Include="RuntimeConfiguration.cs" />
     <Compile Include="Engines\SPSearchEngine.cs" />
     <Compile Include="Runtime\QueryRuntimeException.cs" />
+    <Compile Include="Runtime\ReturnColumn.cs" />
     <Compile Include="Runtime\RuntimeCache.cs" />
     <Compile Include="Runtime\RuntimeMacroProvider.cs" />
     <Compile Include="Runtime\RuntimePropertyBox.cs" />
     <Compile Include="Runtime\TypeMapper.cs" />
     <Compile Include="Runtime\IRuntimeConnection.cs" />
     <Compile Include="Runtime\IQueryEngine.cs" />
-    <Compile Include="Runtime\ReturnColumn.cs" />
+    <Compile Include="Runtime\DetectedColumn.cs" />
     <Compile Include="Enumerations.cs" />
     <Compile Include="Configuration\ConfigurationLoader.cs" />
     <Compile Include="Configuration\PropertyBase.cs" />

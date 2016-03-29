@@ -8,53 +8,46 @@
 *   Use of this work or any derivative constitute an acceptance of all license terms and conditions.
 *   
 *   Project: NAB.K2.SharePointSearch
-*   Namespace: NAB.K2.SharePointSearch.Configuration
+*   Namespace: NAB.K2.SharePointSearch.Engines
 *   Written by: nathan.brown 
 **********************************************************************************/
 #endregion
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NAB.K2.SharePointSearch.Configuration
+using NAB.K2.SharePointSearch.Configuration;
+using NAB.K2.SharePointSearch.Runtime;
+
+namespace NAB.K2.SharePointSearch.Engines
 {
-
     /// <summary>
-    /// Class defined a return column for a query
+    /// Base class that Query Engines can use to refactor common methods
+    /// Engines are not required to implement from this base class, only implement IQueryEngine
+    /// 
+    /// You may ask why functions such as ProcessColumnOutput are not centralized so they are processed the same way
     /// </summary>
-    public class QueryColumn : PropertyBase
+    public class QueryEngineBase
     {
-
-        /// <summary>
-        /// Name of the column from the data source
-        /// </summary>
-        public string SourceColumn { get; set; }
-
-        /// <summary>
-        /// Type of the column at the data source
-        /// </summary>
-        public string ColumnType { get; set; }
-
-
-        /// <summary>
-        /// Full Assembly Qualified Type Name of the function for post processing
-        /// </summary>
-        public string ProcessFunction { get; set; }
-
-        /// <summary>
-        /// Parameter to be passed to the processing function during execution
-        /// </summary>
-        public string ProcessFunctionParameter { get; set; }
         
         /// <summary>
-        /// Indicates if this column should be returned as part of the data set into K2
+        /// Performs any Post-Process operations on a column based on the parameters provided by the configuration columns
         /// </summary>
-        public bool Include { get; set; }
+        /// <param name="column">Configuration settings</param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public object ProcessColumnOutput(QueryColumn column, IMacroValueProvider macros, object value)
+        {
+  
 
 
+            return value;
+
+        }
+        
 
     }
+
 }

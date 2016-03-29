@@ -61,7 +61,8 @@ namespace NAB.K2.SharePointSearch.Configuration
                 switch((NABK2SoType)col.SMOType)
                 {
                     case NABK2SoType.Text:
-                        dc.MaxLength = 255;
+                        //NAB - 2016-03-28 - Changed default size of DataTable from 255 to 1024 for more realistic experience
+                        dc.MaxLength = 1024;
                         break;
                     case NABK2SoType.Memo:
                         dc.MaxLength = 32766;

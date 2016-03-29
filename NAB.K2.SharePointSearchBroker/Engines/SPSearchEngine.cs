@@ -19,6 +19,8 @@ using System.Linq;
 using System.Data;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
+using System.Runtime.CompilerServices;
 using System.Diagnostics;
 
 using Microsoft.SharePoint.Client;
@@ -30,7 +32,6 @@ using SourceCode.SmartObjects.Services.ServiceSDK.Types;
 
 using NAB.K2.SharePointSearch.Configuration;
 using NAB.K2.SharePointSearch.Runtime;
-using System.Threading;
 
 namespace NAB.K2.SharePointSearch.Engines
 {
@@ -63,9 +64,9 @@ namespace NAB.K2.SharePointSearch.Engines
 
 
         #region Retrieve Columns
-        public List<ReturnColumn> RetrieveOutputColumns(IRuntimeConnection conn, IMacroValueProvider parameters, QueryRuntime qRuntime)
+        public List<DetectedColumn> DetectOutputColumns(IRuntimeConnection conn, IMacroValueProvider parameters, QueryRuntime qRuntime)
         {
-            List<ReturnColumn> cols = new List<ReturnColumn>();
+            List<DetectedColumn> cols = new List<DetectedColumn>();
 
             using (ClientContext clientContext = new ClientContext(qRuntime.SiteUrl.GenerateString(parameters)))
             {
@@ -78,11 +79,22 @@ namespace NAB.K2.SharePointSearch.Engines
                     //Get the first item
                     var i = t.ResultRows.First();
 
+                    int valueLength;
+
                     foreach (var key in i.Keys)
                     {
                         Type colType = TypeMapper.DecipherObjectType(i[key]);
+                        
+                        //For strings we should at least try to determine if this is a memo item or not
+                        valueLength = 0;
+                        if (i[key] is string)
+                        {
+                            valueLength = ((string)i[key]).Length;
+                        }
 
-                        cols.Add(new ReturnColumn() { Name = key, DisplayName = key, Description = key, InternalType = colType.Name, ColumnType = colType, ContainsData = true });
+                        cols.Add(new DetectedColumn() { Name = key, DisplayName = key, Description = key, InternalType = colType.Name, ColumnType = colType, ContainsData = true, ContentLength = valueLength });
+
+                        
                     }
 
                     return cols;
@@ -249,7 +261,7 @@ namespace NAB.K2.SharePointSearch.Engines
         public DataTable ExecuteToDataTable(IRuntimeConnection conn, IMacroValueProvider parameters, QueryRuntime qRuntime)
         {
 
-            List<ReturnColumn> cols = new List<ReturnColumn>();
+            List<DetectedColumn> cols = new List<DetectedColumn>();
 
             using (ClientContext clientContext = new ClientContext(qRuntime.SiteUrl.GenerateString(parameters)))
             {
@@ -268,17 +280,17 @@ namespace NAB.K2.SharePointSearch.Engines
                     {
                         DataRow dr = dt.Rows.Add();
 
-                        foreach (var col in qRuntime.Query.Columns)
+                        foreach (var col in qRuntime.ReturnColumns)
                         {
-                            if(item.ContainsKey(col.SourceColumn))
+                            if(item.ContainsKey(col.Column.SourceColumn))
                             {
-                                dr[col.Name] = item[col.SourceColumn] ?? DBNull.Value;
+                                //dr[col.Name] = item[col.SourceColumn] ?? DBNull.Value;
+                                dr[col.Column.Name] = _GetColumnValue(item, parameters, col);
                             }
                             else
                             {
-                                throw new Exception(string.Format("Column {0} not found in result set.", col.SourceColumn));
-                            }
-                            
+                                throw new Exception(string.Format("Column {0} not found in result set.", col.Column.SourceColumn));
+                            }                            
                             
                         }
 
@@ -299,6 +311,20 @@ namespace NAB.K2.SharePointSearch.Engines
                     return dt;
                 }
 
+            }
+
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private object _GetColumnValue(IDictionary<string, object> resultRow, IMacroValueProvider parameters, ReturnColumn column)
+        {
+            if(column.IsProcessed)
+            {
+                return column.ProcessColumnOutput(resultRow[column.Column.SourceColumn], parameters);
+            }
+            else
+            {
+                return resultRow[column.Column.SourceColumn] ?? DBNull.Value;
             }
 
         }
@@ -380,14 +406,14 @@ namespace NAB.K2.SharePointSearch.Engines
             //Have the connective provide authentication informaiton
             conn.AuthenticateContext(context);
 
-
             SPSearch.KeywordQuery q = new SPSearch.KeywordQuery(context);
             q.QueryText = qRuntime.QueryText.GenerateString(parameters);
             q.EnableOrderingHitHighlightedProperty = false;
             q.EnableInterleaving = false;
-            q.TrimDuplicates = true;
-            q.Refiners = refiner;            
-            
+            q.EnableSorting = false;
+            q.TrimDuplicates = false;
+            q.Refiners = refiner;
+           
 
             //Refiner query only asks for a single row (because all we are interested in are the refiner values)
             q.RowLimit = 1;

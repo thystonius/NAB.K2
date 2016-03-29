@@ -25,6 +25,7 @@ namespace NAB.K2.SharePointSearch.Configuration
     /// Configuration Settings and Definition of a Query
     /// Should ONLY contain public properties as this is the class that gets serialized as part of the configuration store
     /// NO private or instance methods, use an extension class for those
+    /// NO runtime only or Processed values as these should use a runtime optomized class for that
     /// </summary>
     public class QueryDef
     {

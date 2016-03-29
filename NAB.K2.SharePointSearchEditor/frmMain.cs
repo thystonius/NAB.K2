@@ -40,7 +40,6 @@ namespace NAB.K2.SharePointSearchEditor
         private const string IMG_CONFIG = "page";
         private const string IMG_FOLDERTOOL = "folder_tool";
         private const string IMG_QUERY = "query";
-
        
         private const string DEFAULT_FILE = "C:\\Program Files (x86)\\K2 blackpearl\\ServiceBroker\\NAB.K2.SharePointSearch.conf";
 
@@ -50,8 +49,10 @@ namespace NAB.K2.SharePointSearchEditor
         private ConfigurationStore _Store = new ConfigurationStore(true);
 
         private string _SelectedFolderId = null;
+                
 
 
+        #region Form Load & ctor
 
         public frmMain()
         {
@@ -65,7 +66,7 @@ namespace NAB.K2.SharePointSearchEditor
             }
 
             //If the default file exists, then load it
-            if(File.Exists(_CurrentFile))
+            if (File.Exists(_CurrentFile))
             {
                 _Load(_CurrentFile);
             }
@@ -76,12 +77,6 @@ namespace NAB.K2.SharePointSearchEditor
             }
 
         }
-
-
-
-       
-
-        #region Form Load
 
 
         private void _LoadDisplay()
@@ -185,20 +180,38 @@ namespace NAB.K2.SharePointSearchEditor
 
         #region Load and Save
 
-        private void _Save(string filename)
+        private bool _Save(string filename, bool showDialog)
         {
+            if(string.IsNullOrWhiteSpace(filename) || showDialog)
+            {
+                dialogSave.FileName = filename;
+                if (dialogSave.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    _CurrentFile = dialogSave.FileName;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                _CurrentFile = filename;
+            }
+            
+
             try
             {
-                ConfigurationLoader.SaveStoreFromFile(_Store, filename);
+                ConfigurationLoader.SaveStoreFromFile(_Store, _CurrentFile);
 
             }catch(Exception e)
             {
                 MessageBox.Show(string.Format("Unable to save: {0} - {1}", e.GetType().Name, e.Message));
-                return;
+                return false;
             }
             
-            _CurrentFile = filename;
             _Saved = true;
+            return true;
         }
 
         private void _Load(string filename)
@@ -231,10 +244,9 @@ namespace NAB.K2.SharePointSearchEditor
             if (!_SaveCheck())
                 return;
 
-
             _Store = new ConfigurationStore(true);
 
-            _CurrentFile = DEFAULT_FILE;
+            _CurrentFile = string.Empty;
 
             _Saved = true;
 
@@ -259,43 +271,49 @@ namespace NAB.K2.SharePointSearchEditor
 
         private void buttonSave_Click(object sender, EventArgs e)
         {
-
-            dialogSave.FileName = _CurrentFile;
-            if(dialogSave.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                _Save(dialogSave.FileName);
-            }
+            _Save(_CurrentFile, false);
             
         }
 
+        private void buttonSaveAs_Click(object sender, EventArgs e)
+        {
+            _Save(_CurrentFile, true);
+        }
 
+        /// <summary>
+        /// Canned when the next action will result in the clearing or destruction of current data
+        /// Performs a check on the save status and prompts if unsaved changes are present.  Will trigger save operation if requested by user.
+        /// </summary>
+        /// <returns>True if ok to proceed, False if operation should be canceled</returns>
         private bool _SaveCheck()
         {
             if(!_Saved)
             {
-                //Ask if they want to abandon changes
-                return MessageBox.Show("The current configuration file is not saved.  Are you sure you want to continue and loose changes?", "Unsaved changes", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == System.Windows.Forms.DialogResult.Yes;
+                //Ask if they want to save before continueing
+                System.Windows.Forms.DialogResult d = MessageBox.Show("The current configuration file is not saved.  Would you like to save changes?", "Unsaved Changes", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
 
+                switch(d)
+                {
+                    case System.Windows.Forms.DialogResult.Yes:
+                        return _Save(_CurrentFile, false);
+                    
+                    case System.Windows.Forms.DialogResult.No:
+                        return true;
+
+                    case System.Windows.Forms.DialogResult.Cancel:
+                        return false;
+                }
+
+                //Huh?  How did we get here?
+                return false;
+                
             }else{
                 return true;
             }
 
         }
 
-        private void buttonConfigSettings_Click(object sender, EventArgs e)
-        {
-
-            if(frmProperties.EditConfig(_Store, this))
-            {
-                //Main Labels
-                labelName.Text = _Store.StoreName;
-                labelVersion.Text = _Store.StoreVersion;
-
-                _Saved = false;
-
-            }
-
-        }
+        
 
         #endregion
 
@@ -455,8 +473,7 @@ namespace NAB.K2.SharePointSearchEditor
 
 
         #endregion
-
-
+        
         #region Query Actions
 
 
@@ -586,7 +603,22 @@ namespace NAB.K2.SharePointSearchEditor
         #endregion
 
 
-        #region Other Toolbar Buttons
+        #region Other Toolbar Buttons Events
+
+        private void buttonConfigSettings_Click(object sender, EventArgs e)
+        {
+
+            if (frmProperties.EditConfig(_Store, this))
+            {
+                //Main Labels
+                labelName.Text = _Store.StoreName;
+                labelVersion.Text = _Store.StoreVersion;
+
+                _Saved = false;
+
+            }
+
+        }
 
         private void buttonConnect_Click(object sender, EventArgs e)
         {
@@ -595,16 +627,18 @@ namespace NAB.K2.SharePointSearchEditor
 
         }       
 
-
+        private void labelName_DoubleClick(object sender, EventArgs e)
+        {
+            //Double click should launch properties
+            buttonConfigSettings_Click(sender, e);
+            
+        }
 
 
         #endregion
 
-
-
-
-
-
+        
+        
 
     }
 }

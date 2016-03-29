@@ -30,6 +30,7 @@ using NAB.K2.SharePointSearch.Broker;
 using System.Diagnostics;
 using System.Threading;
 
+
 namespace NAB.K2.SharePointSearch
 {
     public class SharePointSearchBroker : ServiceAssemblyBase, IRuntimeConnection
@@ -70,8 +71,15 @@ namespace NAB.K2.SharePointSearch
         /// </summary>
         public const string DIAG_FOLDERID = "NAB.K2.DIAG-FOLDER";
 
-
+        /// <summary>
+        /// ID of the Diagnostic Query Service Object
+        /// </summary>
         public const string DIAG_QUERIES = "NAB.K2.DAIG-QUERIES";
+        
+        /// <summary>
+        /// ID of the Diagnostic Functions Service Object
+        /// </summary>
+        public const string DIAG_FUNCTIONS = "NAB.K2.DAIG-FUNCTIONS";
 
 
         /// <summary>
@@ -427,7 +435,6 @@ namespace NAB.K2.SharePointSearch
                 box.AddParameter(serviceObject.Properties[method.InputProperties[i]]);
             }
 
-
             for (int i = 0; i < method.MethodParameters.Count; i++)
             {
                 box.AddParameter(method.MethodParameters[i]);
@@ -439,7 +446,7 @@ namespace NAB.K2.SharePointSearch
             //Get the Engine
             IQueryEngine engine = EngineController.GetEngine(query.Engine);
 
-
+            //Create Cancelation Token to ensure we effectively perform Timeout operations and not leave dangling tasks
             var cancelTokenSource = new CancellationTokenSource();
 
             //Using block to dispose the Task

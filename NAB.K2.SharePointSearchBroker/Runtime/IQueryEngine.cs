@@ -22,7 +22,6 @@ using System.Threading.Tasks;
 
 using NAB.K2.SharePointSearch.Configuration;
 
-
 using SourceCode.SmartObjects.Services.ServiceSDK;
 using SourceCode.SmartObjects.Services.ServiceSDK.Objects;
 using SourceCode.SmartObjects.Services.ServiceSDK.Types;
@@ -44,7 +43,7 @@ namespace NAB.K2.SharePointSearch.Runtime
         /// </summary>
         /// <param name="q"></param>
         /// <returns></returns>
-        List<ReturnColumn> RetrieveOutputColumns(IRuntimeConnection conn, IMacroValueProvider parameters, QueryRuntime query);
+        List<DetectedColumn> DetectOutputColumns(IRuntimeConnection conn, IMacroValueProvider parameters, QueryRuntime query);
 
 
         /// <summary>

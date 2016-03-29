@@ -110,6 +110,28 @@ namespace NAB.K2.SharePointSearchEditor
 
                 labelTime.Text = string.Format("Took: {0} seconds.", sw.Elapsed.TotalSeconds.ToString("0.0##"));
 
+
+
+                //NAB - 2016-03-28 - Added below to make it more clear which columns will be returned
+                //Now we are going to highlight the columns that are marked for return
+
+                //First get the first header
+                gridResults.EnableHeadersVisualStyles = false;
+                DataGridViewCellStyle returnStyle = new DataGridViewCellStyle(gridResults.Columns[0].HeaderCell.Style);
+                returnStyle.BackColor = Color.LimeGreen;
+                
+                foreach(var c in _qr.Query.Columns)
+                {
+                    if(c.Include)
+                    {
+                        //Find this in the table
+                        var gcol = gridResults.Columns[c.Name];
+
+                        gcol.HeaderCell.Style = returnStyle;
+                    }
+                }
+
+
                 return true;
             }
             catch (Exception ex)

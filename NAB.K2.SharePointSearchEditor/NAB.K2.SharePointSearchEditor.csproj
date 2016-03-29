@@ -47,6 +47,9 @@
     <Prefer32Bit>true</Prefer32Bit>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>NAB.K2.SharePointSearchEditor.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.SharePoint.Client, Version=16.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -70,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DesignConnection.cs" />
+    <Compile Include="DesignFunctionCache.cs" />
     <Compile Include="DesignParameterProvider.cs" />
     <Compile Include="frmConnection.cs">
       <SubType>Form</SubType>
@@ -171,6 +175,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\table_lightning.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="NAB.K2.SharePointSearchEditor.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -31,6 +31,10 @@ namespace NAB.K2.SharePointSearch
 
     }
 
+    /// <summary>
+    /// Duplicate of the K2SoTypes
+    /// This is to allow the Designer to run completely outside of a K2 Environment.
+    /// </summary>
     public enum NABK2SoType
     {
         Text = 0,
