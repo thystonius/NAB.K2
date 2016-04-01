@@ -30,8 +30,7 @@ namespace NAB.K2.SharePointSearchEditor
         private QueryDef _Query;
 
         private Dictionary<string, string> _Values = new Dictionary<string, string>();
-
-
+        
         public bool PrepareParameters(QueryDef q)
         {
             _Query = q;
@@ -41,7 +40,6 @@ namespace NAB.K2.SharePointSearchEditor
             {
                 return true;
             }
-
 
             foreach(var p in q.Parameters)
             {

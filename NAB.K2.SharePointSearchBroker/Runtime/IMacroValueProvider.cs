@@ -44,7 +44,7 @@ namespace NAB.K2.SharePointSearch.Runtime
         /// <param name="name">Name or the parameter or macro</param>
         /// <returns>Raw untouched value</returns>
         string GetValueRaw(string name);
-
+        
 
     }
 }

@@ -45,6 +45,8 @@ namespace NAB.K2.SharePointSearch.Engines
         public static string REFINER_SUFFIX = ".REFINERS";
         
         public static string REFINER_PARAMETER = "SYS.REFINER";
+        public static string REFINER_PARAMETER_NONE = "SYS.REFINER.SHOWNONE";
+        public static string REFINER_PARAMETER_NONETEXT = "SYS.REFINER.NONETEXT";
 
         public static string METADATA_REFINERSEARCH = "REFINER-SEARCH";
 
@@ -156,18 +158,24 @@ namespace NAB.K2.SharePointSearch.Engines
                 {
 
                     DataRow dr = dt.NewRow();
+                    ReturnColumn col;
 
-                    //Get each return property
-                    for (int i = 0; i < returnProperties.Length; i++)
+                    for(int i = 0; i < qRuntime.ReturnColumns.Count; i++)
                     {
-                        //Get the current return property
-                        string returnName = returnProperties[i].Name;
+                        col = qRuntime.ReturnColumns[i];
 
-                        //Set value (use DBNull in case of null)
-                        dr[returnName] = item[qRuntime.GetReturnName(returnName)] ?? DBNull.Value;
+                        if (item.ContainsKey(col.Column.SourceColumn))
+                        {
+                            //dr[col.Name] = item[col.SourceColumn] ?? DBNull.Value;
+                            dr[col.Column.Name] = _GetColumnValue(item, parameters, col);
+                        }
+                        else
+                        {
+                            throw new Exception(string.Format("Column {0} not found in result set.", col.Column.SourceColumn));
+                        }
 
                     }
-
+                    
                     //Add the row
                     dt.Rows.Add(dr);
                     
@@ -213,6 +221,8 @@ namespace NAB.K2.SharePointSearch.Engines
 
                 int rowCount = 0;
 
+                int docCount = 0;
+
                 //Loop through the items in the collection
                 foreach (var item in t.ResultRows)
                 {
@@ -236,6 +246,8 @@ namespace NAB.K2.SharePointSearch.Engines
 
                     dr[PROP_REFINEMENT_DISPLAY] = item[PROP_REFINEMENT_NAME];
                     
+                    //Try and sum up the total documents returned
+                    docCount += Convert.ToInt32(item[PROP_COUNT]);
 
                     //Add the row
                     dt.Rows.Add(dr);
@@ -248,6 +260,43 @@ namespace NAB.K2.SharePointSearch.Engines
                         break;
                     }
 
+                }
+
+                string NoneParam = parameters.GetValueRaw(REFINER_PARAMETER_NONE);
+                bool ShowNoneRow = false;
+                if(!string.IsNullOrEmpty(NoneParam))
+                {
+                    bool.TryParse(NoneParam, out ShowNoneRow);
+                }
+
+
+                if (ShowNoneRow)
+                {
+                    string s = parameters.GetValueRaw(REFINER_PARAMETER_NONETEXT);
+
+
+                    DataRow dr = dt.NewRow();
+
+                    dr[PROP_REFINERNAME] = string.Empty;
+                    dr[PROP_TYPE] = string.Empty;
+                    dr[PROP_SCORE] = 0;
+                    dr[PROP_HITCOUNT] = 0;
+                    dr[PROP_MIN] = 0;
+                    dr[PROP_MAX] = 0;
+                    dr[PROP_MEAN] = 0;
+                    dr[PROP_REFINEMENT_NAME] = string.Empty;
+                    dr[PROP_REFINEMENT_TOKEN] = string.Empty;
+                    
+                    //Return the total count
+                    dr[PROP_COUNT] = docCount;
+
+                    //Try and logically parse the display
+
+                    dr[PROP_REFINEMENT_DISPLAY] = "All";
+                    
+
+                    //Add the row
+                    dt.Rows.Add(dr);
                 }
 
             }
@@ -492,8 +541,7 @@ namespace NAB.K2.SharePointSearch.Engines
             method.MetaData.Description = query.Description;
             method.Type = MethodType.List;
 
-
-            //No input properties for list
+            //No input properties for list (only parameters)
 
 
             //All Properties are for the return
@@ -513,14 +561,11 @@ namespace NAB.K2.SharePointSearch.Engines
                 {
                     //Create the parameter
                     ServiceObjectHelper.CreateMethodParameter(so, method, p.Name.ToUpper(), p.DisplayName, p.Description, (SoType)p.SMOType, true);
-
                 }
-
             }
 
-            //Now add a parameter for the Refinement Value
-            ServiceObjectHelper.CreateMethodParameter(so, method, REFINER_PARAMETER, "Refiner Value", "Value for any refiners to add to the query", SoType.Memo, false);
-                        
+            //Now add a parameter for the Refinement Token Value
+            ServiceObjectHelper.CreateMethodParameter(so, method, REFINER_PARAMETER, "Refiner Token", "Value of the refiner token to filter the query", SoType.Memo, false);
 
             //Finally Return the SO
             return so;
@@ -571,9 +616,12 @@ namespace NAB.K2.SharePointSearch.Engines
             method.ReturnProperties = returnProps;
 
 
-            //Now all the query parameters (Same as for the query, so the refiners will match)
-            ServiceObjectHelper.CreateMethodParameter(so, method, REFINER_PARAMETER, "Refiner Field", "Search Managed Property to get the list of refiner values for", SoType.Text, true);
+            //Add some Refiner Specific Parameters
+            ServiceObjectHelper.CreateMethodParameter(so, method, REFINER_PARAMETER, "Refiner Field", "Managed Property to get the refiner values for", SoType.Text, true);
+            ServiceObjectHelper.CreateMethodParameter(so, method, REFINER_PARAMETER_NONE, "Include Empty Token", "Indicates if a record with a blank token result shouldbe added (essentially an No-Filter record)", SoType.YesNo, false);
+            ServiceObjectHelper.CreateMethodParameter(so, method, REFINER_PARAMETER_NONETEXT, "Empty Token Text", "Text to use for the display field of the Empty Token Value", SoType.Text, false);
 
+            //Now all the query parameters (Same as for the query, so the refiners will match)
             //Add all the same parameters as the query
             foreach (var p in query.Parameters)
             {

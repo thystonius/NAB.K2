@@ -22,6 +22,7 @@ namespace NAB.K2.SharePointSearch.Functions
 {
     /// <summary>
     /// Interface used for classes that define a function for post processing query values
+    /// There will be a new instance of the IProcessFunction per column, per query that uses it.  Thus each is unique to the specific column.
     /// </summary>
     public interface IProcessFunction
     {

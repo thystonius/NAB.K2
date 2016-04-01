@@ -94,7 +94,11 @@ namespace NAB.K2.SharePointSearch.Runtime
 
         }
 
-
+        /// <summary>
+        /// Returns the raw value of a parameter / macro value
+        /// </summary>
+        /// <param name="name">Name of the parameter</param>
+        /// <returns></returns>
         public string GetValueRaw(string name)
         {
             if (_parameters.PropertyHasValue(name))

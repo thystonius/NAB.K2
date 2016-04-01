@@ -112,9 +112,9 @@ namespace NAB.K2.SharePointSearch.Engines
                         rc.ContainsData = true;
 
                         //try to get the length so we can check make an attempt to check for memo fields
-                        if (i.FieldValuesAsText[curCol] != null)
+                        if (i.FieldValues[curCol] != null)
                         {
-                            rc.ContentLength = i.FieldValuesAsText[curCol].Length;
+                            rc.ContentLength = i.FieldValues[curCol].ToString().Length;
                         }
                         else
                         {

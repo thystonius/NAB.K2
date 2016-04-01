@@ -83,7 +83,9 @@
     <Compile Include="Configuration\QueryExtension.cs" />
     <Compile Include="Engines\QueryEngineBase.cs" />
     <Compile Include="ExceptionUtility.cs" />
+    <Compile Include="Functions\StringRemoveEndingChar.cs" />
     <Compile Include="Functions\IProcessFunction.cs" />
+    <Compile Include="Functions\DateTimeFromISO8601.cs" />
     <Compile Include="Functions\OWSUserExtractUserFullName.cs" />
     <Compile Include="Runtime\EngineController.cs" />
     <Compile Include="QueryTimeoutException.cs" />

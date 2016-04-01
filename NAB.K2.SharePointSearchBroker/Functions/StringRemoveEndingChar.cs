@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,15 +22,13 @@ using System.Threading.Tasks;
 namespace NAB.K2.SharePointSearch.Functions
 {
     /// <summary>
-    /// Function class that will parse the SharePoint OWS User Field and extract the Full Name value
-    /// Input is exacted as: jeanluc.picard@domain.com | Jean-Luc Picard | 6A3A302BBB777C6D756C746979999274735C6A6F686E6C73 i:0#.w|domain\jeanluc.picard
+    /// Function class that will remove a trailing character from a column
     /// </summary>
-    public class OWSUserExtractUserFullName : IProcessFunction
+    public class StringRemoveEndingChar : IProcessFunction
     {
-        public const string FUNCTION_NAME = "OWSUser Extract Full Name";
-        public const string FUNCTION_DESCRIPTION = @"Parses SharePoint user identity string and extracts the user's Full Name.
-This will parse fields such as:
-jeanluc.picard@domain.com | Jean-Luc Picard | 6A3A302BBB777C6D756C746979999274735C6A6F686E6C73 i:0#.w|domain\jeanluc.picard";
+
+        public const string FUNCTION_NAME = "String Remove Training Value";
+        public const string FUNCTION_DESCRIPTION = @"Removes the training value specified in parameter from the string";
 
         #region Name & Description
         public string Name
@@ -42,25 +41,26 @@ jeanluc.picard@domain.com | Jean-Luc Picard | 6A3A302BBB777C6D756C74697999927473
             get { return FUNCTION_DESCRIPTION; }
         }
         #endregion
-
-
+        
         public object ProcessValue(object input, string parameters)
         {
+            //If there is no parameter, then just return
+            if(string.IsNullOrWhiteSpace(parameters))
+            {
+                return input;
+            }
+
             string s = input as string;
 
             if(!string.IsNullOrWhiteSpace(s))
             {
-                int i = s.IndexOf("|");
-                int i2 = s.IndexOf("|", i + 1);
-
-                if(i > 0 && i2 > i)
+                if(s.EndsWith(parameters))
                 {
-                    return s.Substring(i + 1, i2 - i - 1).Trim();
+                    return s.Substring(0, s.Length - parameters.Length);
                 }
                 else
                 {
-                    //Not sure what we have here?
-                    return s;
+                    return input;
                 }
 
             }

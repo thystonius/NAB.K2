@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,15 +22,14 @@ using System.Threading.Tasks;
 namespace NAB.K2.SharePointSearch.Functions
 {
     /// <summary>
-    /// Function class that will parse the SharePoint OWS User Field and extract the Full Name value
-    /// Input is exacted as: jeanluc.picard@domain.com | Jean-Luc Picard | 6A3A302BBB777C6D756C746979999274735C6A6F686E6C73 i:0#.w|domain\jeanluc.picard
+    /// Function class that will parse a Date stored as Text in the ISO 8601 format (yyyy-MM-ddTHH:mm:ssZ)
     /// </summary>
-    public class OWSUserExtractUserFullName : IProcessFunction
+    public class DateTimeFromISO8601 : IProcessFunction
     {
-        public const string FUNCTION_NAME = "OWSUser Extract Full Name";
-        public const string FUNCTION_DESCRIPTION = @"Parses SharePoint user identity string and extracts the user's Full Name.
-This will parse fields such as:
-jeanluc.picard@domain.com | Jean-Luc Picard | 6A3A302BBB777C6D756C746979999274735C6A6F686E6C73 i:0#.w|domain\jeanluc.picard";
+
+        public const string FUNCTION_NAME = "Date Time from ISO8601 formated string";
+        public const string FUNCTION_DESCRIPTION = @"Parses a Date Time stored as text in ISO 8601 format such as:
+2016-01-13T21:37:34Z";
 
         #region Name & Description
         public string Name
@@ -43,24 +43,21 @@ jeanluc.picard@domain.com | Jean-Luc Picard | 6A3A302BBB777C6D756C74697999927473
         }
         #endregion
 
-
+        
         public object ProcessValue(object input, string parameters)
         {
             string s = input as string;
 
             if(!string.IsNullOrWhiteSpace(s))
             {
-                int i = s.IndexOf("|");
-                int i2 = s.IndexOf("|", i + 1);
-
-                if(i > 0 && i2 > i)
+                DateTime d2;
+                if(DateTime.TryParse(s, null, DateTimeStyles.RoundtripKind, out d2))
                 {
-                    return s.Substring(i + 1, i2 - i - 1).Trim();
+                    return d2;
                 }
                 else
                 {
-                    //Not sure what we have here?
-                    return s;
+                    return null;
                 }
 
             }

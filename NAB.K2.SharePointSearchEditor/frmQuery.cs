@@ -525,6 +525,21 @@ namespace NAB.K2.SharePointSearchEditor
             }
         }
 
+        private void _gridColumnsEnsureRowVisible(int rowIndex)
+        {
+            if(rowIndex < gridColumns.FirstDisplayedScrollingRowIndex)
+            {
+                //Scroll up
+                gridColumns.FirstDisplayedScrollingRowIndex = rowIndex;
+            }else{
+                if(rowIndex > (gridColumns.FirstDisplayedScrollingRowIndex + gridColumns.DisplayedRowCount(false)))
+                {
+                    //Scroll down
+                    gridColumns.FirstDisplayedScrollingRowIndex = rowIndex - gridColumns.DisplayedRowCount(false) - 1;
+                }
+            }
+                    
+        }
 
         private void _moveUp()
         {
@@ -548,9 +563,14 @@ namespace NAB.K2.SharePointSearchEditor
                     rows.Insert(index, prevRow);
                     gridColumns.ClearSelection();
                     gridColumns.Rows[index - 1].Selected = true;
+                    _gridColumnsEnsureRowVisible(index - 1);
+                    
+                    
                 }
             }
         }
+
+
 
         private void _moveDown()
         {
@@ -575,6 +595,7 @@ namespace NAB.K2.SharePointSearchEditor
                     rows.Insert(index, nextRow);
                     gridColumns.ClearSelection();
                     gridColumns.Rows[index + 1].Selected = true;
+                    _gridColumnsEnsureRowVisible(index +1);
                 }
             }
         }

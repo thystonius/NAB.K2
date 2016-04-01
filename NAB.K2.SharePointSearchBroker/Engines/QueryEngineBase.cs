@@ -26,26 +26,14 @@ namespace NAB.K2.SharePointSearch.Engines
     /// <summary>
     /// Base class that Query Engines can use to refactor common methods
     /// Engines are not required to implement from this base class, only implement IQueryEngine
-    /// 
-    /// You may ask why functions such as ProcessColumnOutput are not centralized so they are processed the same way
     /// </summary>
     public class QueryEngineBase
     {
+
         
-        /// <summary>
-        /// Performs any Post-Process operations on a column based on the parameters provided by the configuration columns
-        /// </summary>
-        /// <param name="column">Configuration settings</param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public object ProcessColumnOutput(QueryColumn column, IMacroValueProvider macros, object value)
-        {
-  
+        //Currently nothing here yet
+        
 
-
-            return value;
-
-        }
         
 
     }
